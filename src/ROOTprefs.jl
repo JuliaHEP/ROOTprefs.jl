@@ -1,6 +1,6 @@
 module ROOTprefs
 
-export use_root_jll!, is_root_jll_used, set_ROOTSYS!, get_ROOTSYS, check_root_version, is_root_version_checked
+export use_root_jll!, is_root_jll_used, set_ROOTSYS!, get_ROOTSYS, check_root_version, is_root_version_checked, clean_after_build!, is_clean_after_build_enabled
 
 using Preferences
 
@@ -14,7 +14,15 @@ using Preferences
    When disabled, or if the platform is not supported by the jll mode, the C++ libraries must be installed on the machine before installing the Julia ROOT package and the ROOTSYS preference must be set using [`set_ROOTSYS()`](@ref) function.
 """
 function use_root_jll!(enable=true)
-    @set_preferences!("use_root_jll" => enable)
+    old = @load_preference("use_root_jll")
+    if isnothing(old) || old != enable
+        
+        @set_preferences!("use_root_jll" => enable)
+
+        if haskey(Base.loaded_modules, Base.PkgId(Base.UUID("1706fdcc-8426-44f1-a283-5be479e9517c"), "ROOT"))
+            println(stderr, "BEWARE: the preference change will be effective only after restart of Julia.")
+        end
+    end
 end
 """
     `is_root_jll_used()`
@@ -38,7 +46,8 @@ end
 
      By default, the presence of the `root-config` command in `\$ROOTSYS/bin/root-config` is checked (except if `path` is the empty string). Pass `nocheck=true` as argument to disable the check.
 
-!!! warning each Julia ROOT package version will require a specific release of the C++ ROOT libraries due to dependency on release-dependent C++ API details.
+!!! warning "Each Julia ROOT package version will require a specific release of the C++ ROOT libraries due to dependency on release-dependent C++ API details."
+Before installing a new version, call `use_root_jll(false)` to disable the ROOT_jll mode, and execute `try import ROOT; catch; end`. This will tell you the supported versions if possibly installed one is not supported.
 """
 function set_ROOTSYS!(path=nothing; nocheck=false)
     old = get_ROOTSYS()
@@ -79,7 +88,7 @@ function set_ROOTSYS!(path=nothing; nocheck=false)
     println("ROOTSYS path: ", path)
     
     if old != path && haskey(Base.loaded_modules, Base.PkgId(Base.UUID("1706fdcc-8426-44f1-a283-5be479e9517c"), "ROOT"))
-        println(stderr, "BEWARE: the preference change will be effective only after restarting Julia.")
+        println(stderr, "BEWARE: the preference change will be effective only after restart of Julia.")
     end
 end
 
@@ -108,6 +117,14 @@ end
 """
 function is_root_version_checked()
     @load_preference("check_root_version", true)
+end
+
+function clean_after_build!(enable)
+    @set_preferences!("clean_after_build" => enable)
+end
+
+function is_clean_after_build_enabled()
+    @load_preference("clean_after_build", true)
 end
 
 end
