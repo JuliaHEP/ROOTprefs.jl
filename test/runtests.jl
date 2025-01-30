@@ -1,18 +1,12 @@
-import Pkg
-
-Pkg.activate(temp=true)
-Pkg.add("Test")
-Pkg.add("ROOT_jll")
+# This script is run by Pkg.test("ROOTprefs").
+#
+# Note: the TestEnv package (https://github.com/JuliaTesting/TestEnv.jl) can be
+# used to run the script outside Pkg.test() for debugging purpose.
 
 using Test
 import ROOT_jll
 
-#add tested project in LOAD_PATH to import it
-push!(LOAD_PATH, dirname(@__DIR__))
 using ROOTprefs
-
-#remove added projet from LOAD_PATH to ignore possible preference settings
-filter!(!=(dirname(@__DIR__)), LOAD_PATH)
 
 rootsys = ROOT_jll.root_path |> dirname |> dirname
 

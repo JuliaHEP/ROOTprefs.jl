@@ -1,8 +1,53 @@
+"""
+  `ROOTprefs`
+
+Package providing functions to set compilation options for the [ROOT](https://juliapackages.com/p/root) package.
+
+In principle, the options control how the C++ ROOT libraries needed are provided. The ROOT.jl package offers two options: automatic installation by the native Julia manager, using the ROOT_jll package; used of libraries installed externally to Julia.
+
+Note: the options are stored in the active project `LocalPreferences.toml` file. Depot-wide and stacked environment are not supported; only preferences set in the active `LocalPreferences.toml` are taken into account for the ROOT package compilation options.
+
+"""
 module ROOTprefs
 
 export use_root_jll!, is_root_jll_used, set_ROOTSYS!, get_ROOTSYS, check_root_version, is_root_version_checked, clean_after_build!, is_clean_after_build_enabled
 
-using Preferences
+using TOML
+
+preference_file() = joinpath(dirname(Base.active_project()), "LocalPreferences.toml")
+
+function _set_preference(preference::String, value)
+    prefs = if isfile(preference_file())
+        TOML.parsefile(preference_file())
+    else
+        Dict{String,Any}()
+    end
+
+    if !haskey(prefs, "ROOT") || !isa(prefs["ROOT"],Dict)
+        prefs["ROOT"] = Dict{String, Any}()
+    end
+    
+    prefs["ROOT"][preference] = value
+
+    open(preference_file(), "w") do f
+        TOML.print(f, prefs, sorted=true)
+    end
+end
+
+function _load_preference(preference::String, default)
+    prefs = if isfile(preference_file())
+        TOML.parsefile(preference_file())
+    else
+        Dict{String,Any}()
+    end
+
+    if !haskey(prefs, "ROOT") || !isa(prefs["ROOT"],Dict)
+        return default
+    end
+    
+    return get(prefs["ROOT"], preference, default)
+end
+
 
 """
     `use_root_jll!(enable=true)`
@@ -14,11 +59,13 @@ using Preferences
    When disabled, or if the platform is not supported by the jll mode, the C++ libraries must be installed on the machine before installing the Julia ROOT package and the ROOTSYS preference must be set using [`set_ROOTSYS()`](@ref) function.
 """
 function use_root_jll!(enable=true)
-    old = @load_preference("use_root_jll")
-    if isnothing(old) || old != enable
-        
-        @set_preferences!("use_root_jll" => enable)
-
+    #old = load_preference("ROOT", "use_root_jll")
+    old = is_root_jll_used()
+    
+    #set_preferences!("ROOT", "use_root_jll" => enable)
+    _set_preference("use_root_jll", enable)
+    
+    if old != enable
         if haskey(Base.loaded_modules, Base.PkgId(Base.UUID("1706fdcc-8426-44f1-a283-5be479e9517c"), "ROOT"))
             println(stderr, "BEWARE: the preference change will be effective only after restart of Julia.")
         end
@@ -32,7 +79,8 @@ end
 @see [`use_root_jll!()`](@ref).
 """
 function is_root_jll_used()
-    @load_preference("use_root_jll", true)
+    #    load_preference("ROOT", "use_root_jll", true)
+    _load_preference("use_root_jll", true)
 end                 
 
 """
@@ -70,7 +118,8 @@ function set_ROOTSYS!(path=nothing; nocheck=false)
 	Sys.isexecutable(rootconfig) || error("$rootconfig is not executable.")
     end
     
-    @set_preferences!("ROOTSYS" => path)
+    #set_preferences("ROOT", "ROOTSYS" => path)
+    _set_preference("ROOTSYS", path)
     
     if !isempty(path)
         print("ROOT version: ")
@@ -98,7 +147,8 @@ end
         Retrieve the ROOTSYS preference (see [`set_ROOTSYS()`](@ref).
     """
 function get_ROOTSYS()
-    @load_preference("ROOTSYS", "")
+    #    load_preference("ROOT", "ROOTSYS", "")
+    _load_preference("ROOTSYS", "")
 end
 
 """
@@ -107,7 +157,8 @@ end
    Enable or disable the ROOT C++ library version check for the non-jll mode. By default, the Julia ROOT package checks that the version of the ROOT C++ libraries set by [`set_ROOTSYS()`](@ref) matches with the version(s) it was validated for and throw an exception on `import` if it does not. Use this function to disable (or re-enable) the check.
 """
 function check_root_version(enable=true)
-    @set_preferences!("check_root_version" => enable)
+    #    set_preferences("ROOT", "check_root_version" => enable)
+    _set_preference("check_root_version", enable)
 end
 
 """
@@ -116,15 +167,18 @@ end
    Retrieve the ROOT version check setting (see [`check_root_version!()`](@ref).
 """
 function is_root_version_checked()
-    @load_preference("check_root_version", true)
+    #    load_preference("ROOT", "check_root_version", true)
+    _load_preference("check_root_version", true)
 end
 
 function clean_after_build!(enable)
-    @set_preferences!("clean_after_build" => enable)
+    #    set_preferences("ROOT", "clean_after_build" => enable)
+    _set_preference("clean_after_build", enable)
 end
 
 function is_clean_after_build_enabled()
-    @load_preference("clean_after_build", true)
+    #    load_preference("ROOT", "clean_after_build", true)
+    _load_preference("clean_after_build", true)
 end
 
 end
