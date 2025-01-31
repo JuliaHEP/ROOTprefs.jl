@@ -60,8 +60,9 @@ function _load_preference(preference::String, default)
     if isnothing(val)
         # The preference is not set or ROOT package is not install. Read it
         # directly from the LocalPreference.toml file, if it exists.
-        return _load_preference_from_toml(preference, default)
+        val = _load_preference_from_toml(preference, default)
     end
+    val
 end
 
 """
