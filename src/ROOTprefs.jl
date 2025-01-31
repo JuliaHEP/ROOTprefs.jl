@@ -48,12 +48,16 @@ function _load_preference_from_toml(preference::String, default)
 end
 
 function _load_preference(preference::String, default)
-    try
+    val = try
         # We first use the method from Preferences that handles precompilation
         # dependency and stacked environemnt.  This will fail if the ROOT package is
         # not installedXW
-        return Preferences.load_preference("ROOT", preference)
+        Preferences.load_preference("ROOT", preference)
     catch
+        nothing
+    end
+    
+    if isnothing(val)
         # The preference is not set or ROOT package is not install. Read it
         # directly from the LocalPreference.toml file, if it exists.
         return _load_preference_from_toml(preference, default)
