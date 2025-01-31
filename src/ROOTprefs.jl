@@ -5,13 +5,12 @@ Package providing functions to set compilation options for the [ROOT](https://ju
 
 In principle, the options control how the C++ ROOT libraries needed are provided. The ROOT.jl package offers two options: automatic installation by the native Julia manager, using the ROOT_jll package; used of libraries installed externally to Julia.
 
-Note: the options are stored in the active project `LocalPreferences.toml` file. Depot-wide and stacked environment are not supported; only preferences set in the active `LocalPreferences.toml` are taken into account for the ROOT package compilation options.
-
 """
 module ROOTprefs
 
 export use_root_jll!, is_root_jll_used, set_ROOTSYS!, get_ROOTSYS, check_root_version, is_root_version_checked, clean_after_build!, is_clean_after_build_enabled
 
+import Preferences
 using TOML
 
 preference_file() = joinpath(dirname(Base.active_project()), "LocalPreferences.toml")
@@ -34,7 +33,7 @@ function _set_preference(preference::String, value)
     end
 end
 
-function _load_preference(preference::String, default)
+function _load_preference_from_toml(preference::String, default)
     prefs = if isfile(preference_file())
         TOML.parsefile(preference_file())
     else
@@ -48,6 +47,18 @@ function _load_preference(preference::String, default)
     return get(prefs["ROOT"], preference, default)
 end
 
+function _load_preference(preference::String, default)
+    try
+        # We first use the method from Preferences that handles precompilation
+        # dependency and stacked environemnt.  This will fail if the ROOT package is
+        # not installedXW
+        return Preferences.load_preference("ROOT", preference)
+    catch
+        # The preference is not set or ROOT package is not install. Read it
+        # directly from the LocalPreference.toml file, if it exists.
+        return _load_preference_from_toml(preference, default)
+    end
+end
 
 """
     `use_root_jll!(enable=true)`
