@@ -1,7 +1,7 @@
 name = "ROOTprefs"
 author = "Philippe Gras CEA/IRFU"
 uuid = "492d890c-d9c4-11ef-b95f-3722e36032c2"
-version = "1.0.0-rc1"
+version = "1.0.0"
 
 [deps]
 Preferences = "21216c6a-2e73-6563-6e65-726566657250"
