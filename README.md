@@ -1,5 +1,7 @@
 # ROOTprefs.jl
 
+[![doc-dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliahep.github.io/ROOTprefs.jl/dev/)
+
 This Julia package is used to set shared library installation preferences for [ROOT.jl](https://github.com/JuliaHEP/ROOT.jl). Preferences must be set before the `ROOT` module is imported, which is why methods for setting them are provided in a separate package.
 
 `ROOT.jl` offers a Julia interface to the C++ [ROOT](https://root.cern) framework. This package requires the C++ ROOT shared libraries and a shared library that provides the Julia bindings based on [CxxWrap](https://github.com/JuliaInterop/CxxWrap.jl).
