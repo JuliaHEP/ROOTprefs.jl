@@ -5,7 +5,7 @@ Main module of the `ROOTprefs` Julia package.
 """
 module ROOTprefs
 
-export use_root_jll!, is_root_jll_used, set_ROOTSYS!, get_ROOTSYS, check_root_version, is_root_version_checked, clean_after_build!, is_clean_after_build_enabled
+export set_use_root_jll, get_use_root_jll, set_ROOTSYS, get_ROOTSYS, set_check_root_version, get_check_root_version, set_clean_after_buildd, get_clean_after_build
 
 import Preferences
 using TOML
@@ -74,19 +74,17 @@ function _load_preference(preference::String, default)
 end
 
 """
-    `use_root_jll!(enable=true)`
+    set_use_root_jll(enable=true)
 
-   Enable or disable the jll mode (default when the platform is supported by jll).
+Enable or disable the jll mode (default when the platform is supported by jll).
 
-   The Julia ROOT package needs the C++ ROOT libraries to run. Prebuilt ROOT libraries are provided in the [JuliaBinaryWrappers](https://github.com/JuliaBinaryWrappers/) repository as Julia packages. In the jll mode, the native package manager of Julia installs automatically the ROOT libraries on the machine. This mode is currently supported for Linux on x86 architecture.
+The Julia ROOT package needs the C++ ROOT libraries to run. Prebuilt ROOT libraries are provided in the [JuliaBinaryWrappers](https://github.com/JuliaBinaryWrappers/) repository as Julia packages. In the jll mode, the native package manager of Julia installs automatically the ROOT libraries on the machine. This mode is currently supported for Linux on x86 architecture.
 
-   When disabled, or if the platform is not supported by the jll mode, the C++ libraries must be installed on the machine before installing the Julia ROOT package and the ROOTSYS preference must be set using [`set_ROOTSYS()`](@ref) function.
+When disabled, or if the platform is not supported by the jll mode, the C++ libraries must be installed on the machine before installing the Julia ROOT package and the ROOTSYS preference must be set using [`set_ROOTSYS()`](@ref) function.
 """
-function use_root_jll!(enable=true; nowarn=false)
-    #old = load_preference("ROOT", "use_root_jll")
-    old = is_root_jll_used()
+function set_use_root_jll(enable=true; nowarn=false)
+    old = get_use_root_jll()
     
-    #set_preferences!("ROOT", "use_root_jll" => enable)
     _set_preference("use_root_jll", enable)
     
     if old != enable && !nowarn
@@ -96,21 +94,20 @@ function use_root_jll!(enable=true; nowarn=false)
     end
 end
 """
-    is_root_jll_used()
+    get_use_root_jll()
 
    Retrieve the jll mode setting. Return `true` if enable, `false` if disables.
 
-@see [`use_root_jll!()`](@ref).
+@see [`set_use_root_jll()`](@ref).
 """
-function is_root_jll_used()
-    #    load_preference("ROOT", "use_root_jll", true)
+function get_use_root_jll()
     _load_preference("use_root_jll", true)
 end                 
 
 """
-    `set_ROOTSYS!(path=nothing)`
+   set_ROOTSYS(path=nothing)
 
-Set the path of the ROOT C++ libraries installation, also known as ROOTSYS, when it is handle by the Julia package manager with the _jll packages (see [`use_root_jll(enable)`](@ref).
+Set the path of the ROOT C++ libraries installation, also known as ROOTSYS, when it is handle by the Julia package manager with the _jll packages (see [`set_use_root_jll(enable)`](@ref).
 
 The Julia ROOT package will use the command `\$ROOTSYS/bin/root-config`, where `\$ROOTSYS` is the path set by this function, to locate the ROOT C++ libraries (typically in `\$ROOTSYS/lib`).
 
@@ -119,9 +116,9 @@ When called without argument and the ROOTSYS environment variable is set, its va
 By default, the presence of the `root-config` command in `\$ROOTSYS/bin/root-config` is checked (except if `path` is the empty string). Pass `nocheck=true` as argument to disable the check.
 
 !!! warning "Each Julia ROOT package version will require a specific release of the C++ ROOT libraries due to dependency on release-dependent C++ API details."
-Before installing a new version, call `use_root_jll(false)` to disable the ROOT_jll mode, and execute `try import ROOT; catch; end`. This will tell you the supported versions if possibly installed one is not supported.
+Before installing a new version, call `set_use_root_jll(false)` to disable the ROOT_jll mode, and execute `try import ROOT; catch; end`. This will tell you the supported versions if possibly installed one is not supported.
 """
-function set_ROOTSYS!(path=nothing; nocheck=false)
+function set_ROOTSYS(path=nothing; nocheck=false)
     old = get_ROOTSYS()
     
     if isnothing(path) && haskey(ENV, "ROOTSYS")
@@ -175,40 +172,38 @@ function get_ROOTSYS()
 end
 
 """
-   check_root_version(enable=true)
+   set_check_root_version(enable=true)
 
 Enable or disable the ROOT C++ library version check for the non-jll mode. By default, the Julia ROOT package checks that the version of the ROOT C++ libraries set by [`set_ROOTSYS()`](@ref) matches with the version(s) it was validated for and throw an exception on `import` if it does not. Use this function to disable (or re-enable) the check.
 """
-function check_root_version(enable=true)
-    #    set_preferences("ROOT", "check_root_version" => enable)
+function set_check_root_version(enable=true)
     _set_preference("check_root_version", enable)
 end
 
 """
-   is_root_version_checked()
+   get_check_root_version()
 
-Retrieve the ROOT version check setting (see [`check_root_version!()`](@ref).
+Retrieve the ROOT version check setting (see [`set_check_root_version()`](@ref).
 """
-function is_root_version_checked()
+function get_check_root_version()
     _load_preference("check_root_version", true)
 end
 
-
 """
-   clean_after_build(enable=true)
+   set_clean_after_build(enable=true)
 
 Enable or disable the deletion of the intermediate build products after the shared library is built (the default).
 """
-function clean_after_build!(enable=true)
+function set_clean_after_build(enable=true)
     _set_preference("clean_after_build", enable)
 end
 
 """
-   clean_after_build(enable=true)
+   set_clean_after_build(enable=true)
 
-Retrieve the clean-after-build setting. See [`clean_after_build()`](@ref).
+Retrieve the clean-after-build setting. See [`set_clean_after_build()`](@ref).
 """
-function is_clean_after_build_enabled()
+function get_clean_after_build()
     _load_preference("clean_after_build", true)
 end
 
