@@ -1,18 +1,24 @@
-import Pkg
+# This script is run by Pkg.test("ROOTprefs").
+#
+# It can also be run in the test directory environment:
+#
+# cd test
+# julia --project=.
+# julia> ]instantiate
+# julia> include("runtest.jl")
+#
+# The TestEnv package can be used to run in a clean environment as Phg.test(...)
+# does.
 
-Pkg.activate(temp=true)
-Pkg.add("Test")
-Pkg.add("ROOT_jll")
+push!(LOAD_PATH, joinpath(@__DIR__, ".."))
 
 using Test
 import ROOT_jll
 
-#add tested project in LOAD_PATH to import it
-push!(LOAD_PATH, dirname(@__DIR__))
 using ROOTprefs
 
-#remove added projet from LOAD_PATH to ignore possible preference settings
-filter!(!=(dirname(@__DIR__)), LOAD_PATH)
+# clean-up for test of default value in case of run in the test directory environment
+isfile(joinpath(@__DIR__, "LocalPreferences.toml")) && rm(joinpath(@__DIR__, "LocalPreferences.toml") )
 
 rootsys = ROOT_jll.root_path |> dirname |> dirname
 
